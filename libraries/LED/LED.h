@@ -20,7 +20,6 @@ class LED{
 			gnd->set(LOW);
 		};//..
 
-
 		void on(){
 			hot->on();
 			ison = true;

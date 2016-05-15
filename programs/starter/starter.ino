@@ -2,7 +2,7 @@
 
 LED * led = new LED(7,6);
 Pin * mic = new Pin(A1);
-int maxVol = 250;
+int maxVol = 230;
 int mils = 1000;
 
 void setup() {
