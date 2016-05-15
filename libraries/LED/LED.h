@@ -5,6 +5,9 @@
 #include "Pin.h"
 
 class LED{
+  protected:
+	  Pin *hot, *gnd;
+
 	public:
 		boolean ison;
 
@@ -41,8 +44,5 @@ class LED{
 		boolean isOn(){
 			return ison;
 		};
-
-	protected:
-		Pin *hot, *gnd;
 };
 #endif

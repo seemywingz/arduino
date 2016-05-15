@@ -4,7 +4,6 @@
 #include "Arduino.h"
 
 class Pin{
-
   private:
 		int pinNumber;
 

@@ -14,7 +14,7 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
   int vol = mic->read();
-  Serial.println(vol);
+//  Serial.println(vol);
 
   if(vol > maxVol){
     led->on();
