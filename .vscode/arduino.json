@@ -1,6 +1,0 @@
-{
-    "board": "arduino:avr:nano",
-    "configuration": "cpu=atmega328",
-    "port": "/dev/cu.usbserial-AH01A6T1",
-    "sketch": "volume_sensor/volume_sensor.ino"
-}
