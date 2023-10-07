@@ -1,11 +1,16 @@
+#include <Pin.h>
 #include <Ultrasonic.h>
 
-Pin *buzzer = new Pin(A1);
-Pin *light = new Pin(LED_BUILTIN);
-Ultrasonic *u = new Ultrasonic(4, 5);
-
 bool sendLog = true;
+
 double dist;
+double maxDist = 6;
+
+int ms = 100;
+
+Pin *light = new Pin(10);
+Pin *buzzer = new Pin(9);
+Ultrasonic *sensor = new Ultrasonic(3, 6);
 
 void setup()
 {
@@ -18,26 +23,23 @@ void setup()
 
 void loop()
 {
-  
-  dist = u->getDistanceCM();
+
+  dist = sensor->getDistanceCM();
   sendLog ? Serial.println(dist) : true;
 
-  if (dist < 100)
+  if (dist < maxDist)
   {
-    alarm();
+
+    
+
+    light->on();
+    buzzer->on();
+  }
+  else
+  {
+    light->off();
+    buzzer->off();
   }
 
-  delay(10);
-}
-
-void alarm(){
-  int d = 500;
-  light->on();
-  buzzer->startTone(300);
-  delay(d);
-  buzzer->startTone(1000);
-  delay(d);
-  buzzer->stopTone();
-  light->off();
-  delay(200);
+  delay(ms);
 }

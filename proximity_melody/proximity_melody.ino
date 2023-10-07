@@ -33,48 +33,44 @@ void setup()
   // attachInterrupt(digitalPinToInterrupt(melodyPin), chngMelody, LOW);
 }
 
-
 void loop()
 {
 
   dist = sensor->getDistanceCM();
   sendLog ? Serial.println(dist) : true;
-  
+
   int *melody;
   int numNotes = 0;
   int tempo = 180;
 
-
-
   if (dist < maxDist)
   {
-    
 
-    switch(melodyNum) {
-      case 1:
-        melody = melody_nokia;
-        numNotes = sizeof(melody_nokia) / sizeof(melody_nokia[0]);
-        tempo = 180;
-        break;
-      case 2:
-        tempo = 180;
-        melody = melody_takeOnMe;
-        numNotes = sizeof(melody_takeOnMe) / sizeof(melody_takeOnMe[0]);
-        break;
-      case 3:
-        tempo = 110;
-        melody = melody_zeldaTheme;
-        numNotes = sizeof(melody_zeldaTheme) / sizeof(melody_zeldaTheme[0]);
-        break;
-      case 4:
-        tempo = 118;
-        melody = melody_starWarsTheme;
-        numNotes = sizeof(melody_starWarsTheme) / sizeof(melody_starWarsTheme[0]);
-        break;
-      default:
-        break;
+    switch (melodyNum)
+    {
+    case 1:
+      melody = melody_nokia;
+      numNotes = sizeof(melody_nokia) / sizeof(melody_nokia[0]);
+      tempo = 180;
+      break;
+    case 2:
+      tempo = 180;
+      melody = melody_takeOnMe;
+      numNotes = sizeof(melody_takeOnMe) / sizeof(melody_takeOnMe[0]);
+      break;
+    case 3:
+      tempo = 110;
+      melody = melody_zeldaTheme;
+      numNotes = sizeof(melody_zeldaTheme) / sizeof(melody_zeldaTheme[0]);
+      break;
+    case 4:
+      tempo = 118;
+      melody = melody_starWarsTheme;
+      numNotes = sizeof(melody_starWarsTheme) / sizeof(melody_starWarsTheme[0]);
+      break;
+    default:
+      break;
     }
-
 
     light->on();
     playMelody(buzzer->pinNumber, melody, numNotes, tempo);
@@ -87,6 +83,7 @@ void loop()
   delay(ms);
 }
 
-void chngMelody(){
+void chngMelody()
+{
   melodyNum >= maxMelodies ? melodyNum = 1 : melodyNum++;
 }
