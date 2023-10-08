@@ -71,15 +71,74 @@ void gameOfLife()
   int columns = 8;
   int cells[rows][columns];
 
-  testMatrix(*cells, rows, columns);
+  // testMatrix(*cells, rows, columns);
   initCells(*cells, rows, columns);
   randomizeCells(*cells, rows, columns);
 
   for (;;)
   {
     drawCells(*cells, rows, columns);
-    delay(100);
+    delay(1000);
+    applyRulesToCells(*cells, rows, columns);
   }
+}
+
+void applyRulesToCells(int *cells, int rows, int columns)
+{
+  int nextGenCells[rows][columns];
+  initCells(*nextGenCells, rows, columns);
+
+  // for (int x = 0; x < rows; x++)
+  // {
+  //   for (int y = 0; y < columns; y++)
+  //   {
+  //     int neighbors = countNeighbors(*cells, rows, columns, x, y);
+  //     Serial.print("Neighbors count ");
+  //     Serial.println(neighbors);
+  //     if (cells[x * columns + y] == 1 && (neighbors == 2 || neighbors == 3))
+  //     {
+  //       nextGenCells[x][y] = 1;
+  //     }
+  //     else if (cells[x * columns + y] == 0 && neighbors == 3)
+  //     {
+  //       nextGenCells[x][y] = 1;
+  //     }
+  //     else
+  //     {
+  //       nextGenCells[x][y] = 0;
+  //     }
+  //   }
+  // }
+
+  randomizeCells(*nextGenCells, rows, columns);
+  // copy nextGenCells to current cells
+  for (int x = 0; x < rows; x++)
+  {
+    for (int y = 0; y < columns; y++)
+    {
+      cells[x * columns + y] = nextGenCells[x][y];
+    }
+  }
+}
+
+int countNeighbors(int *cells, int rows, int columns, int x, int y)
+{
+  int neighbors = 0;
+
+  for (int i = x - 1; i < x + 2; i++)
+  {
+    for (int j = y - 1; j < y + 2; j++)
+    {
+      if (i >= 0 && i != x && i < columns && j >= 0 && j != y && j < rows)
+      {
+        if (cells[i * columns + j] == 1)
+        {
+          neighbors++;
+        }
+      }
+    }
+  }
+  return neighbors;
 }
 
 void drawCells(int *cells, int rows, int columns)
@@ -116,27 +175,34 @@ void randomizeCells(int *cells, int rows, int columns)
 void testMatrix(int *cells, int rows, int columns)
 {
 
+  Serial.println("Begin Testing LED Matrix");
   int initDelay = 1000;
+
+  // bottom left
   matrix.fillScreen(0);
   matrix.drawPixel(0, 0, MAGENTA);
   matrix.show();
   delay(initDelay);
 
+  // top left
   matrix.fillScreen(0);
   matrix.drawPixel(rows - 1, 0, MAGENTA);
   matrix.show();
   delay(initDelay);
 
+  // top right
   matrix.fillScreen(0);
   matrix.drawPixel(rows - 1, columns - 1, MAGENTA);
   matrix.show();
   delay(initDelay);
 
+  // bottom right
   matrix.fillScreen(0);
   matrix.drawPixel(0, columns - 1, MAGENTA);
   matrix.show();
   delay(initDelay);
 
+  // loop through each pixel from bottom left to top right
   for (int x = 0; x < rows; x++)
   {
     for (int y = 0; y < columns; y++)
@@ -148,6 +214,8 @@ void testMatrix(int *cells, int rows, int columns)
     }
   }
 
+  Serial.println("Begin Testing Cell Data Array");
+  // set all cells to 0  and test drawing from cell data
   initCells(cells, rows, columns);
   cells[1 * columns + 1] = 1;
   cells[6 * columns + 1] = 1;
