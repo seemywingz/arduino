@@ -152,18 +152,6 @@ void testMatrix(int *cells, int rows, int columns) {
   int initDelay = 1000;
   int color = BLUE;
 
-  // matrix.drawCircle(4, 3, 3, color);
-  // matrix.show();
-  // delay(1000);
-
-  // matrix.drawCircle(4, 3, 2, color);
-  // matrix.show();
-  // delay(1000);
-
-  // matrix.drawCircle(4, 3, 1, color);
-  // matrix.show();
-  // delay(1000);
-
   // bottom left
   matrix.fillScreen(0);
   matrix.drawPixel(0, 0, color);
@@ -198,7 +186,7 @@ void testMatrix(int *cells, int rows, int columns) {
 
   matrix.fillScreen(0);
   matrix.drawPixel(3, 4, color);
-  matrix.drawPixel(3, 3, color);
+  matrix.drawPixel(2, 3, color);
   matrix.drawPixel(5, 4, color);
   matrix.drawPixel(4, 3, color);
   matrix.show();
