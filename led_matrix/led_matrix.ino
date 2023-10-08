@@ -71,6 +71,18 @@ void gameOfLife()
   int columns = 8;
   int cells[rows][columns];
 
+  matrix.drawCircle(4, 3, 3, MAGENTA);
+  matrix.show();
+  delay(1000);
+
+  matrix.drawCircle(4, 3, 2, MAGENTA);
+  matrix.show();
+  delay(1000);
+
+  matrix.drawCircle(4, 3, 1, MAGENTA);
+  matrix.show();
+  delay(1000);
+
   // testMatrix(*cells, rows, columns);
   initCells(*cells, rows, columns);
   randomizeCells(*cells, rows, columns);
