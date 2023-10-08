@@ -164,29 +164,29 @@ void testMatrix(int *cells, int rows, int columns) {
   // matrix.show();
   // delay(1000);
 
-  // // bottom left
-  // matrix.fillScreen(0);
-  // matrix.drawPixel(0, 0, color);
-  // matrix.show();
-  // delay(initDelay);
+  // bottom left
+  matrix.fillScreen(0);
+  matrix.drawPixel(0, 0, color);
+  matrix.show();
+  delay(initDelay);
 
-  // // top left
-  // matrix.fillScreen(0);
-  // matrix.drawPixel(rows - 1, 0, color);
-  // matrix.show();
-  // delay(initDelay);
+  // bottom right
+  matrix.fillScreen(0);
+  matrix.drawPixel(columns - 1, 0, color);
+  matrix.show();
+  delay(initDelay);
 
-  // // top right
-  // matrix.fillScreen(0);
-  // matrix.drawPixel(rows - 1, columns - 1, color);
-  // matrix.show();
-  // delay(initDelay);
+  // top right
+  matrix.fillScreen(0);
+  matrix.drawPixel(columns - 1, rows - 1, color);
+  matrix.show();
+  delay(initDelay);
 
-  // // bottom right
-  // matrix.fillScreen(0);
-  // matrix.drawPixel(0, columns - 1, color);
-  // matrix.show();
-  // delay(initDelay);
+  // top left
+  matrix.fillScreen(0);
+  matrix.drawPixel(0, rows - 1, color);
+  matrix.show();
+  delay(initDelay);
 
   matrix.fillScreen(0);
   matrix.drawPixel(3, 4, color);
@@ -194,7 +194,7 @@ void testMatrix(int *cells, int rows, int columns) {
   matrix.drawPixel(4, 4, color);
   matrix.drawPixel(4, 3, color);
   matrix.show();
-  delay(1000);
+  delay(initDelay);
 
   matrix.fillScreen(0);
   matrix.drawPixel(3, 4, color);
@@ -202,7 +202,7 @@ void testMatrix(int *cells, int rows, int columns) {
   matrix.drawPixel(5, 4, color);
   matrix.drawPixel(4, 3, color);
   matrix.show();
-  delay(10000000);
+  delay(initDelay);
 
   // loop through each pixel from bottom left to top right
   for (int x = 0; x < columns; x++) {
