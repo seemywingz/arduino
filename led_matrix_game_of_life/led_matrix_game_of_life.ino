@@ -46,12 +46,13 @@
 int width = 8;
 int height = 8;
 int dataPIN = 6;
-int brightness = 1;
+int brightness = 10;
+int cellColor = MAGENTA;
 uint8_t matrixType =
     NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     width, height, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
-
+void (*resetFunc)(void) = 0;
 void setup() {
   matrix.begin();
   Serial.begin(9600);
@@ -67,10 +68,10 @@ void loop() {
 void gameOfLife() {
   int rows = 8;
   int columns = 8;
+  int generations = 0;
   int cells[rows][columns];
 
   // testMatrix(*cells, rows, columns);
-  // delay(100000);
 
   initArray(*cells, rows, columns);
   randomizeCells(*cells, rows, columns);
@@ -78,6 +79,9 @@ void gameOfLife() {
   for (;;) {
     drawCells(*cells, rows, columns);
     applyRulesToCells(*cells, rows, columns);
+    if (generations++ >= 100) {
+      resetFunc();
+    }
     delay(100);
   }
 }
@@ -132,7 +136,7 @@ void drawCells(int *cells, int rows, int columns) {
   for (int x = 0; x < columns; x++) {
     for (int y = 0; y < rows; y++) {
       if (cells[x * columns + y] == 1) {
-        matrix.drawPixel(x, y, MAGENTA);
+        matrix.drawPixel(x, y, cellColor);
       }
     }
   }
