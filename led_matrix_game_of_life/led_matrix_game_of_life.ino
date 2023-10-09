@@ -52,7 +52,9 @@ uint8_t matrixType =
     NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     width, height, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
+
 void (*resetFunc)(void) = 0;
+
 void setup() {
   matrix.begin();
   Serial.begin(9600);
