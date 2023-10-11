@@ -1,12 +1,10 @@
-// Adafruit_NeoMatrix example for single NeoPixel Shield.
-// Scrolls 'Howdy' across the matrix in a portrait (vertical) orientation.
-
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
-#ifndef PSTR
-#define PSTR  // Make Arduino Due happy
-#endif
+#include <Pin.h>
+// #ifndef PSTR
+// #define PSTR  // Make Arduino Due happy
+// #endif
 
 // Color definitions
 #define BLACK 0x0000
@@ -43,23 +41,28 @@
 // Arduino.  When held that way, the first pixel is at the top right, and
 // lines are arranged in columns, progressive order.  The shield uses
 // 800 KHz (v2) pixels that expect GRB color data.
-int width = 8;
-int height = 8;
+int rows = 8;
+int columns = 8;
 int dataPIN = 6;
-int brightness = 10;
+int generations = 0;
 int cellColor = MAGENTA;
+Pin *btn1 = new Pin(3, INPUT_PULLUP);
 uint8_t matrixType =
     NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-    width, height, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
+    columns, rows, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
 
-void (*resetFunc)(void) = 0;
+// Brightness Config
+volatile int brightness = 1;
+const int brightnessStep = 10;
+const int maxBrightness = 255;
 
 void setup() {
   matrix.begin();
   Serial.begin(9600);
-  matrix.setBrightness(brightness);
   randomSeed(analogRead(0));
+  matrix.setBrightness(brightness);
+  attachInterrupt(digitalPinToInterrupt(btn1->pinNumber), btn1Press, RISING);
 }
 
 void loop() {
@@ -68,9 +71,6 @@ void loop() {
 }
 
 void gameOfLife() {
-  int rows = 8;
-  int columns = 8;
-  int generations = 0;
   int cells[rows][columns];
 
   // testMatrix(*cells, rows, columns);
@@ -81,11 +81,22 @@ void gameOfLife() {
   for (;;) {
     drawCells(*cells, rows, columns);
     applyRulesToCells(*cells, rows, columns);
-    if (generations++ >= 100) {
-      resetFunc();
+    if (generations++ >= 69) {
+      generations = 0;
+      initArray(*cells, rows, columns);
+      randomizeCells(*cells, rows, columns);
     }
     delay(100);
   }
+}
+
+void btn1Press() {
+  brightness = (brightness + brightnessStep > maxBrightness)
+                   ? 1
+                   : brightness + brightnessStep;
+  matrix.setBrightness(brightness);
+  Serial.print("Setting Brightness to: ");
+  Serial.println(brightness);
 }
 
 void applyRulesToCells(int *cells, int rows, int columns) {

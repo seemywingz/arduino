@@ -6,10 +6,9 @@ int mills = 1000;
 
 void setup(){};
 
-void loop()
-{
-    p->on();
-    delay(mills);
-    p->off();
-    delay(mills);
+void loop() {
+  p->on();
+  delay(mills);
+  p->off();
+  delay(mills);
 };
