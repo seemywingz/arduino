@@ -54,8 +54,10 @@ volatile int brightness = 3;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
 
+int colors[] = {MAGENTA, BLUE, RED, GREEN, CYAN, YELLOW, WHITE};
+volatile int currentColor = 0;
+volatile int cellColor = colors[currentColor];
 int generations = 0;
-int cellColor = MAGENTA;
 
 Pin *btn1 = new Pin(3, INPUT_PULLUP);
 
@@ -69,6 +71,8 @@ void setup() {
 
 void loop() {
   gameOfLife();
+  // matrix.drawRect(4, 4, 3, 3, cellColor);
+  // matrix.show();
   delay(100);
 }
 
@@ -77,9 +81,12 @@ void btn1Press() {
   unsigned long interrupt_time = millis();
   // If interrupts come faster than 200ms, assume it's a bounce and ignore
   if (interrupt_time - last_interrupt_time > 300) {
-    brightness = (brightness + brightnessStep > maxBrightness)
-                     ? 3
-                     : brightness + brightnessStep;
+    brightness += brightnessStep;
+    if (brightness > maxBrightness) {
+      brightness = 3;
+      currentColor = (currentColor + 1 >= 7) ? 0 : currentColor + 1;
+      cellColor = colors[currentColor];
+    }
     matrix.setBrightness(brightness);
   }
   last_interrupt_time = interrupt_time;
@@ -96,7 +103,7 @@ void gameOfLife() {
   for (;;) {
     drawCells(*cells, rows, columns);
     applyRulesToCells(*cells, rows, columns);
-    if (generations++ >= 69) {
+    if (generations++ >= 60) {
       generations = 0;
       initArray(*cells, rows, columns);
       randomizeCells(*cells, rows, columns);
