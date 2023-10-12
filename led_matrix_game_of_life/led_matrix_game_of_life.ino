@@ -68,9 +68,7 @@ void setup() {
 }
 
 void loop() {
-  // gameOfLife();
-  matrix.drawCircle(3, 3, 3, MAGENTA);
-  matrix.show();
+  gameOfLife();
   delay(100);
 }
 
