@@ -85,9 +85,9 @@ void setup() {
 }
 
 void loop() {
-  // gameOfLife();
-  matrix.drawRect(4, 4, 3, 3, cellColor);
-  matrix.show();
+  gameOfLife();
+  // matrix.drawRect(4, 4, 3, 3, cellColor);
+  // matrix.show();
   delay(100);
 }
 
