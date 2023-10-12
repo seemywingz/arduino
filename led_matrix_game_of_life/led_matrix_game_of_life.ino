@@ -15,6 +15,19 @@
 #define MAGENTA 0xF81F
 #define YELLOW 0xFFE0
 #define WHITE 0xFFFF
+#define ORANGE 0xFD20
+#define TEAL 0x0410
+#define VIOLET 0xEC1D
+#define OLIVE 0x5345
+#define GOLD 0xFEA0
+#define SILVER 0xC618
+#define DARK_GREEN 0x0320
+#define FOREST_GREEN 0x2444
+#define CORAL 0xFBEA
+#define SALMON 0xFC0E
+#define ROSE 0xF8A6
+#define PEACH 0xFEA6
+#define BEET_RED 0x8012
 
 // MATRIX DECLARATION:
 // Parameter 1 = width of NeoPixel matrix
@@ -54,7 +67,9 @@ volatile int brightness = 3;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
 
-int colors[] = {MAGENTA, BLUE, RED, GREEN, CYAN, YELLOW, WHITE};
+int colors[] = {MAGENTA, BLUE,   RED,    GREEN,  CYAN,  YELLOW,
+                WHITE,   ORANGE, TEAL,   VIOLET, OLIVE, GOLD,
+                SILVER,  CORAL,  SALMON, ROSE,   PEACH, BEET_RED};
 volatile int currentColor = 0;
 volatile int cellColor = colors[currentColor];
 int generations = 0;
@@ -70,9 +85,9 @@ void setup() {
 }
 
 void loop() {
-  gameOfLife();
-  // matrix.drawRect(4, 4, 3, 3, cellColor);
-  // matrix.show();
+  // gameOfLife();
+  matrix.drawRect(4, 4, 3, 3, cellColor);
+  matrix.show();
   delay(100);
 }
 
@@ -84,7 +99,7 @@ void btn1Press() {
     brightness += brightnessStep;
     if (brightness > maxBrightness) {
       brightness = 3;
-      currentColor = (currentColor + 1 >= 7) ? 0 : currentColor + 1;
+      currentColor = (currentColor + 1 >= 18) ? 0 : currentColor + 1;
       cellColor = colors[currentColor];
     }
     matrix.setBrightness(brightness);
