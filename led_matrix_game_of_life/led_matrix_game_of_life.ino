@@ -44,18 +44,20 @@
 int rows = 8;
 int columns = 8;
 int dataPIN = 6;
-int generations = 0;
-int cellColor = MAGENTA;
-Pin *btn1 = new Pin(3, INPUT_PULLUP);
 uint8_t matrixType =
     NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     columns, rows, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
 
 // Brightness Config
-volatile int brightness = 1;
-const int brightnessStep = 10;
+volatile int brightness = 3;
+const int brightnessStep = 51;
 const int maxBrightness = 255;
+
+int generations = 0;
+int cellColor = MAGENTA;
+
+Pin *btn1 = new Pin(3, INPUT_PULLUP);
 
 void setup() {
   matrix.begin();
@@ -67,7 +69,22 @@ void setup() {
 
 void loop() {
   gameOfLife();
+  // matrix.drawCircle(3, 3, 3, MAGENTA);
+  // matrix.show();
   delay(100);
+}
+
+void btn1Press() {
+  static unsigned long last_interrupt_time = 0;
+  unsigned long interrupt_time = millis();
+  // If interrupts come faster than 200ms, assume it's a bounce and ignore
+  if (interrupt_time - last_interrupt_time > 200) {
+    brightness = (brightness + brightnessStep > maxBrightness)
+                     ? 3
+                     : brightness + brightnessStep;
+    matrix.setBrightness(brightness);
+  }
+  last_interrupt_time = interrupt_time;
 }
 
 void gameOfLife() {
@@ -88,15 +105,6 @@ void gameOfLife() {
     }
     delay(100);
   }
-}
-
-void btn1Press() {
-  brightness = (brightness + brightnessStep > maxBrightness)
-                   ? 1
-                   : brightness + brightnessStep;
-  matrix.setBrightness(brightness);
-  Serial.print("Setting Brightness to: ");
-  Serial.println(brightness);
 }
 
 void applyRulesToCells(int *cells, int rows, int columns) {
