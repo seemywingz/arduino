@@ -58,7 +58,7 @@ int rows = 8;
 int columns = 8;
 int dataPIN = 6;
 uint8_t matrixType =
-    NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
+    NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
     columns, rows, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
 
