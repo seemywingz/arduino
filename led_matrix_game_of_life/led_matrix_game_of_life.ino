@@ -44,7 +44,6 @@ int colors[] = {MAGENTA, BLUE,   RED,    GREEN,  CYAN,  YELLOW,
                 SILVER,  CORAL,  SALMON, ROSE,   PEACH, BEET_RED};
 volatile int currentColor = 0;
 volatile int cellColor = colors[currentColor];
-int generations = 0;
 
 Pin *btn1 = new Pin(3, INPUT_PULLUP);
 
@@ -80,6 +79,7 @@ void btn1Press() {
 }
 
 void gameOfLife() {
+  int generations = 0;
   int cells[rows][columns];
 
   // testMatrix(*cells, rows, columns);
