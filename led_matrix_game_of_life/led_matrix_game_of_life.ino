@@ -51,7 +51,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
 
 // Brightness Config
 volatile int brightness = 3;
-const int brightnessStep = 51;
+const int brightnessStep = 81;
 const int maxBrightness = 255;
 
 int generations = 0;
@@ -68,9 +68,9 @@ void setup() {
 }
 
 void loop() {
-  gameOfLife();
-  // matrix.drawCircle(3, 3, 3, MAGENTA);
-  // matrix.show();
+  // gameOfLife();
+  matrix.drawCircle(3, 3, 3, MAGENTA);
+  matrix.show();
   delay(100);
 }
 
@@ -78,7 +78,7 @@ void btn1Press() {
   static unsigned long last_interrupt_time = 0;
   unsigned long interrupt_time = millis();
   // If interrupts come faster than 200ms, assume it's a bounce and ignore
-  if (interrupt_time - last_interrupt_time > 200) {
+  if (interrupt_time - last_interrupt_time > 300) {
     brightness = (brightness + brightnessStep > maxBrightness)
                      ? 3
                      : brightness + brightnessStep;
