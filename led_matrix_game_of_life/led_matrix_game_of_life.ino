@@ -34,9 +34,7 @@ void setup() {
 }
 
 void loop() {
-  // gameOfLife();
-  matrix.drawCircle(3, 3, 3, cellColor);
-  matrix.show();
+  gameOfLife();
   delay(100);
 }
 
