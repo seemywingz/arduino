@@ -1,51 +1,29 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
+#include <LED_matrix.h>
 #include <Pin.h>
-
-// Color definitions
-#define BLACK 0x0000
-#define BLUE 0x001F
-#define RED 0xF800
-#define GREEN 0x07E0
-#define CYAN 0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW 0xFFE0
-#define WHITE 0xFFFF
-#define ORANGE 0xFD20
-#define TEAL 0x0410
-#define VIOLET 0xEC1D
-#define OLIVE 0x5345
-#define GOLD 0xFEA0
-#define SILVER 0xC618
-#define DARK_GREEN 0x0320
-#define FOREST_GREEN 0x2444
-#define CORAL 0xFBEA
-#define SALMON 0xFC0E
-#define ROSE 0xF8A6
-#define PEACH 0xFEA6
-#define BEET_RED 0x8012
 
 int rows = 8;
 int columns = 8;
-int dataPIN = 6;
+int ledDataPIN = 6;
 uint8_t matrixType =
     NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-    columns, rows, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
+    columns, rows, ledDataPIN, matrixType, NEO_GRB + NEO_KHZ800);
 
 // Brightness Config
 volatile int brightness = 3;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
 
-int colors[] = {MAGENTA, BLUE,   RED,    GREEN,  CYAN,  YELLOW,
-                WHITE,   ORANGE, TEAL,   VIOLET, OLIVE, GOLD,
-                SILVER,  CORAL,  SALMON, ROSE,   PEACH, BEET_RED};
+int colors[] = {MAGENTA, BLUE,   RED,  GREEN, CYAN,   YELLOW, WHITE, ORANGE,
+                TEAL,    VIOLET, GOLD, CORAL, SALMON, ROSE,   PEACH};
 volatile int currentColor = 0;
 volatile int cellColor = colors[currentColor];
 
 Pin *btn1 = new Pin(3, INPUT_PULLUP);
+Pin *btn2 = new Pin(9, INPUT_PULLUP);
 
 void setup() {
   matrix.begin();
@@ -56,9 +34,9 @@ void setup() {
 }
 
 void loop() {
-  gameOfLife();
-  // matrix.drawRect(4, 4, 3, 3, cellColor);
-  // matrix.show();
+  // gameOfLife();
+  matrix.drawCircle(3, 3, 3, cellColor);
+  matrix.show();
   delay(100);
 }
 
@@ -67,13 +45,16 @@ void btn1Press() {
   unsigned long interrupt_time = millis();
   // If interrupts come faster than 200ms, assume it's a bounce and ignore
   if (interrupt_time - last_interrupt_time > 300) {
-    brightness += brightnessStep;
-    if (brightness > maxBrightness) {
-      brightness = 3;
-      currentColor = (currentColor + 1 >= 18) ? 0 : currentColor + 1;
+    // change color if btn2 is low
+    if (btn2->readD() == LOW) {
+      currentColor = (currentColor + 1 >= 15) ? 0 : currentColor + 1;
       cellColor = colors[currentColor];
+    } else {  // change brightness
+      brightness = (brightness + brightnessStep > maxBrightness)
+                       ? 3
+                       : brightness + brightnessStep;
+      matrix.setBrightness(brightness);
     }
-    matrix.setBrightness(brightness);
   }
   last_interrupt_time = interrupt_time;
 }

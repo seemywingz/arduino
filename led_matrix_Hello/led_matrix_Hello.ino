@@ -37,12 +37,12 @@
 // 800 KHz (v2) pixels that expect GRB color data.
 int width = 8;
 int height = 8;
-int dataPIN = 6;
+int ledDataPIN = 6;
 int brightness = 10;
 uint8_t matrixType =
     NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-    width, height, dataPIN, matrixType, NEO_GRB + NEO_KHZ800);
+    width, height, ledDataPIN, matrixType, NEO_GRB + NEO_KHZ800);
 
 const uint16_t colors[] = {matrix.Color(255, 0, 0), matrix.Color(0, 255, 0),
                            matrix.Color(0, 0, 255)};
