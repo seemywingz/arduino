@@ -28,7 +28,6 @@ Pin *btn1 = new Pin(3, INPUT_PULLUP);
 Pin *btn2 = new Pin(9, INPUT_PULLUP);
 
 // Audio Config
-int sensitivity = 1023;
 arduinoFFT FFT = arduinoFFT();
 const uint16_t audioSamples = 128;
 Pin *audioPin = new Pin(A3, INPUT);
@@ -38,7 +37,7 @@ int spectralHeight[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
 void setup() {
   matrix.begin();
-  Serial.begin(115200);
+  // Serial.begin(115200);
   matrix.setBrightness(brightness);
   attachInterrupt(digitalPinToInterrupt(btn1->pinNumber), btn1Press, RISING);
   // testMatrix();
@@ -47,7 +46,6 @@ void setup() {
 void loop() {
   // volumeAnalyzer();
   spectralAnalyzer();
-  // delay(1000);
 }
 
 void spectralAnalyzer() {
@@ -62,7 +60,7 @@ void spectralAnalyzer() {
 
   int spectralData[ledColumns] = {};
   int sum, sampleCount, spectralIndex = 0, maxInput = 2047,
-                        usableSamples = (audioSamples / 2) - 10;
+                        usableSamples = (audioSamples / 2) - 12;
 
   for (int i = 1; i < usableSamples; i++) {
     vReal[i] =
