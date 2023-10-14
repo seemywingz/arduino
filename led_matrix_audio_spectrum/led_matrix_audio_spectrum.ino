@@ -1,7 +1,5 @@
-#include <Adafruit_GFX.h>
-#include <Adafruit_NeoMatrix.h>
-#include <Adafruit_NeoPixel.h>
-#include <LED_matrix.h>
+
+#include <LEDMatrix.h>
 #include <Pin.h>
 #include <arduinoFFT.h>
 
@@ -9,19 +7,13 @@
 int ledRows = 8;
 int ledColumns = 8;
 int ledDataPIN = 6;
-uint8_t matrixType =
-    NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-    ledColumns, ledRows, ledDataPIN, matrixType, NEO_GRB + NEO_KHZ800);
+LEDMatrix matrix(ledRows, ledColumns, ledDataPIN);
 
-// Brightness Config and Color Config
+// Brightness and Color Config
 volatile int brightness = 3;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
-int colors[] = {MAGENTA, BLUE,   RED,  GREEN, CYAN,   YELLOW, WHITE, ORANGE,
-                TEAL,    VIOLET, GOLD, CORAL, SALMON, ROSE,   PEACH};
-volatile int currentColor = 0;
-volatile int cellColor = colors[currentColor];
+int pixelColor = MAGENTA;
 
 // Button Config
 Pin *btn1 = new Pin(3, INPUT_PULLUP);
@@ -33,12 +25,10 @@ const uint16_t audioSamples = 128;
 Pin *audioPin = new Pin(A3, INPUT);
 double vReal[audioSamples];
 double vImage[audioSamples];
-int spectralHeight[] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 
 void setup() {
   matrix.begin();
-  // Serial.begin(115200);
-  matrix.setBrightness(brightness);
+  Serial.begin(115200);
   attachInterrupt(digitalPinToInterrupt(btn1->pinNumber), btn1Press, RISING);
   // testMatrix();
 }
@@ -79,14 +69,14 @@ void spectralAnalyzer() {
   }
   // Serial.println("--------------------");
 
-  matrix.fillScreen(0);
+  matrix.clear();
   for (int i = 0; i < ledColumns; i++) {
     // Serial.println(spectralData[i]);
     for (int j = 0; j < spectralData[i]; j++) {
-      cellColor = (j > 2) ? YELLOW : GREEN;
-      cellColor = (j > 5) ? ORANGE : cellColor;
-      cellColor = (j > 6) ? RED : cellColor;
-      matrix.drawPixel(i, j, cellColor);
+      pixelColor = (j > 2) ? YELLOW : GREEN;
+      pixelColor = (j > 5) ? ORANGE : pixelColor;
+      pixelColor = (j > 6) ? RED : pixelColor;
+      matrix.drawPixel(i, j, pixelColor);
     }
   }
   matrix.show();
@@ -96,12 +86,12 @@ void spectralAnalyzer() {
 //   int raw = audioPin->readA();
 //   int vol = map(raw, 330, 650, 0, ledColumns + 1);
 //   Serial.println(vol);
-//   matrix.fillScreen(0);
+//   matrix.clear();
 //   for (int i = 0; i < ledColumns; i++) {
-//     cellColor = (vol > 3) ? BLUE : GREEN;
-//     cellColor = (vol > 5) ? YELLOW : cellColor;
-//     cellColor = (vol > 7) ? RED : cellColor;
-//     vol > i ? matrix.drawLine(i, 0, i, ledRows - 1, cellColor)
+//     pixelColor = (vol > 3) ? BLUE : GREEN;
+//     pixelColor = (vol > 5) ? YELLOW : pixelColor;
+//     pixelColor = (vol > 7) ? RED : pixelColor;
+//     vol > i ? matrix.drawLine(i, 0, i, ledRows - 1, pixelColor)
 //             : matrix.drawLine(i, 0, i, ledRows - 1, 0);
 //   }
 //   matrix.show();
@@ -113,15 +103,10 @@ void btn1Press() {
   // If interrupts come faster than 200ms, assume it's a bounce and ignore
   if (interrupt_time - last_interrupt_time > 300) {
     // change color if btn2 is low
-    if (btn2->readD() == LOW) {
-      currentColor = (currentColor + 1 >= 15) ? 0 : currentColor + 1;
-      cellColor = colors[currentColor];
-    } else {  // change brightness
-      brightness = (brightness + brightnessStep > maxBrightness)
-                       ? 3
-                       : brightness + brightnessStep;
-      matrix.setBrightness(brightness);
-    }
+    brightness = (brightness + brightnessStep > maxBrightness)
+                     ? 3
+                     : brightness + brightnessStep;
+    matrix.setBrightness(brightness);
   }
   last_interrupt_time = interrupt_time;
 }
@@ -132,46 +117,46 @@ void btn1Press() {
 
 //   // bottom left
 //   Serial.println("Bottom Left");
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(0, 0, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(0, 0, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
 //   // bottom right
 //   Serial.println("Bottom Right");
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(ledColumns - 1, 0, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(ledColumns - 1, 0, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
 //   // top right
 //   Serial.println("Top Right");
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(ledColumns - 1, ledRows - 1, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(ledColumns - 1, ledRows - 1, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
 //   // top left
 //   Serial.println("Top Left");
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(0, ledRows - 1, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(0, ledRows - 1, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
 //   Serial.println("Drawing middle rectangle animation");
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(3, 4, cellColor);
-//   matrix.drawPixel(3, 3, cellColor);
-//   matrix.drawPixel(4, 4, cellColor);
-//   matrix.drawPixel(4, 3, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(3, 4, pixelColor);
+//   matrix.drawPixel(3, 3, pixelColor);
+//   matrix.drawPixel(4, 4, pixelColor);
+//   matrix.drawPixel(4, 3, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
-//   matrix.fillScreen(0);
-//   matrix.drawPixel(3, 4, cellColor);
-//   matrix.drawPixel(2, 3, cellColor);
-//   matrix.drawPixel(5, 4, cellColor);
-//   matrix.drawPixel(4, 3, cellColor);
+//   matrix.clear();
+//   matrix.drawPixel(3, 4, pixelColor);
+//   matrix.drawPixel(2, 3, pixelColor);
+//   matrix.drawPixel(5, 4, pixelColor);
+//   matrix.drawPixel(4, 3, pixelColor);
 //   matrix.show();
 //   delay(testDelay);
 
@@ -179,8 +164,8 @@ void btn1Press() {
 //   Serial.println("Looping through each pixel from bottom left to top right");
 //   for (int x = 0; x < ledColumns; x++) {
 //     for (int y = 0; y < ledRows; y++) {
-//       matrix.fillScreen(0);
-//       matrix.drawPixel(x, y, cellColor);
+//       matrix.clear();
+//       matrix.drawPixel(x, y, pixelColor);
 //       matrix.show();
 //       delay(50);
 //     }
