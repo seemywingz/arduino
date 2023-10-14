@@ -1,7 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
-#include <LED_matrix.h>
+#include <LED_Matrix.h>
 #include <Pin.h>
 
 int rows = 8;
