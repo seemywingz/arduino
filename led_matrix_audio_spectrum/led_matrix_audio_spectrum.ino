@@ -30,16 +30,17 @@
 // IOPins
 IOPin *ledDataPin = new IOPin(6);
 IOPin *audioPin = new IOPin(A3, INPUT);
-IOPin *btn1 = new IOPin(3, INPUT_PULLUP);
-IOPin *btn2 = new IOPin(9, INPUT_PULLUP);
+IOPin *btn1Pin = new IOPin(3, INPUT_PULLUP);
+IOPin *btn2Pin = new IOPin(9, INPUT_PULLUP);
 
 // LED Matrix Config
 int ledRows = 8;
 int ledColumns = 8;
 uint8_t matrixType =
     NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
-    ledColumns, ledRows, 6, matrixType, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoMatrix matrix =
+    Adafruit_NeoMatrix(ledColumns, ledRows, ledDataPin->getPinNumber(),
+                       matrixType, NEO_GRB + NEO_KHZ800);
 
 // Brightness Config and Color Config
 volatile int brightness = 3;
@@ -54,6 +55,9 @@ uint32_t colorPallets[7][4] = {
     {WHITE, WHITE, WHITE, WHITE},
 };
 
+// Button Config
+OneButton btn1(btn1Pin->getPinNumber(), true);
+
 // Audio Config
 arduinoFFT FFT = arduinoFFT();
 int sensitivity = 20;
@@ -66,13 +70,14 @@ double vImage[audioSamples];
 void setup() {
   matrix.begin();
   Serial.begin(115200);
+  initButtonHandlers();
   matrix.setBrightness(brightness);
-  attachInterrupt(digitalPinToInterrupt(btn1->pinNumber), btn1Press, RISING);
   // testMatrix();
 }
 
 void loop() {
   // volumeAnalyzer();
+  btn1.tick();
   spectralAnalyzer();
 }
 
@@ -140,32 +145,31 @@ void spectralAnalyzer() {
 //   matrix.show();
 // }
 
-void btn1Press() {
-  static unsigned long last_interrupt_time = 0;
-  unsigned long interrupt_time = millis();
-  // If interrupts come faster than interruptDelay, assume it's a bounce
-  int interruptDelay = 500;
-  if (interrupt_time - last_interrupt_time < interruptDelay) {
-    last_interrupt_time = interrupt_time;
-    Serial.println("Changing color pallet");
-    currentPalette = (currentPalette + 1) % colorPalletsLength;
-    return;
-  }
-
-  // change color if btn2 is low
-  if (btn2->readD() == LOW) {
-    Serial.println("Changing sensitivity");
-    sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
-                      ? 3
-                      : sensitivity + sensitivityStep;
-  } else {
-    Serial.println("Changing brightness");
-    brightness = (brightness + brightnessStep > maxBrightness)
-                     ? 3
-                     : brightness + brightnessStep;
-    matrix.setBrightness(brightness);
-  }
-  last_interrupt_time = interrupt_time;
+void initButtonHandlers() {
+  // Button click handlers
+  btn1.setClickMs(300);
+  btn1.attachClick([]() {
+    if (btn2Pin->readD() == LOW) {
+      Serial.println("Changing sensitivity");
+      sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
+                        ? 3
+                        : sensitivity + sensitivityStep;
+    } else {
+      Serial.println("Changing brightness");
+      brightness = (brightness + brightnessStep > maxBrightness)
+                       ? 3
+                       : brightness + brightnessStep;
+      matrix.setBrightness(brightness);
+    }
+  });
+  btn1.attachDoubleClick([]() {
+    if (btn2Pin->readD() == LOW) {
+      Serial.println("Changing Visualizer");
+    } else {
+      Serial.println("Changing color pallet");
+      currentPalette = (currentPalette + 1) % colorPalletsLength;
+    }
+  });
 }
 
 void testMatrix() {
