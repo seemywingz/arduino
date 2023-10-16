@@ -1,6 +1,7 @@
 #include <FastLED_Matrix.h>
 
-// Create a matrix using data pin 6, with 8 rows and 8 columns
+// Create a FastLED Matrix:
+// Using  data pin 6, 8 rows, 8 columns and color order of GRB
 LEDMatrix<6, 8, 8, GRB> matrix;
 
 void setup() {
