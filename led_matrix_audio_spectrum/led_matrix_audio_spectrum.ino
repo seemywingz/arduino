@@ -42,30 +42,36 @@ Adafruit_NeoMatrix matrix =
     Adafruit_NeoMatrix(ledColumns, ledRows, ledDataPin->getPinNumber(),
                        matrixType, NEO_GRB + NEO_KHZ800);
 
-// Brightness Config and Color Config
-volatile int brightness = 3;
+// Brightness and Color Config
+const int minBrightness = 3;
+volatile int brightness = minBrightness;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
-volatile int colorPalletsLength = 7;
 volatile int currentPalette = 0;
-uint32_t colorPallets[7][4] = {
+const int colorPalletsLength = 7;
+uint32_t colorPallets[colorPalletsLength][4] = {
     {GREEN, YELLOW, ORANGE, RED},       {BLUE, CYAN, CYAN, VIOLET},
     {MAGENTA, MAGENTA, VIOLET, VIOLET}, {CORAL, SALMON, SALMON, ROSE},
     {ROSE, ROSE, ROSE, ROSE},           {GREEN, GREEN, GREEN, GREEN},
     {WHITE, WHITE, WHITE, WHITE},
 };
 
-// Button Config
-OneButton btn1(btn1Pin->getPinNumber(), true);
-
 // Audio Config
 arduinoFFT FFT = arduinoFFT();
-int sensitivity = 20;
+int minSensitivity = 20;
 int maxSensitivity = 100;
-int sensitivityStep = 20;
+int sensitivity = minSensitivity;
+int sensitivityStep = minSensitivity;
 const uint16_t audioSamples = 64;
 double vReal[audioSamples];
 double vImage[audioSamples];
+
+// Visualization Config
+volatile int visualization = 0;
+int maxVisualization = 2;
+
+// Button Config
+OneButton btn1(btn1Pin->getPinNumber(), true);
 
 void setup() {
   matrix.begin();
@@ -76,7 +82,6 @@ void setup() {
 }
 
 void loop() {
-  // volumeAnalyzer();
   btn1.tick();
   spectralAnalyzer();
 }
@@ -85,7 +90,6 @@ void spectralAnalyzer() {
   for (int i = 0; i < audioSamples; i++) {
     vReal[i] = audioPin->readA() / sensitivity;
     vImage[i] = 0;
-    // Serial.println(vReal[i]);
   }
 
   FFT.Windowing(vReal, audioSamples, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
@@ -106,7 +110,8 @@ void spectralAnalyzer() {
 
     sum += vReal[i];
     sampleCount++;
-    if (i % (usableSamples / ledColumns) == 0) {
+    if (i % (usableSamples / ledColumns) ==
+        0) {  // average data for set of samples
       int data = sum / sampleCount;
       data = (spectralIndex == 0 && data == 3) ? 0 : data;
       spectralData[spectralIndex++] = data;
@@ -114,12 +119,38 @@ void spectralAnalyzer() {
       sampleCount = 0;
     }
   }
-  // Serial.println("--------------------");
 
   matrix.fillScreen(0);
+  switch (visualization) {
+    case 1:
+      drawCircles(spectralData);
+      break;
+    default:
+      drawBars(spectralData);
+      break;
+  }
+  matrix.show();
+}
+
+void drawCircles(int *spectralData) {
+  matrix.fillScreen(0);
+  int circleRadius = spectralData[2];
+  int circleColor = colorPallets[currentPalette][0];
+  circleColor =
+      (circleRadius > 2) ? colorPallets[currentPalette][1] : circleColor;
+  circleColor =
+      (circleRadius > 3) ? colorPallets[currentPalette][2] : circleColor;
+  circleColor =
+      (circleRadius > 5) ? colorPallets[currentPalette][3] : circleColor;
+  matrix.drawCircle(3, 4, circleRadius, circleColor);
+  matrix.show();
+}
+
+void drawBars(int *spectralData) {
+  matrix.fillScreen(0);
   for (int x = 0; x < ledColumns; x++) {
-    // Serial.println(spectralData[i]);
     for (int y = 0; y < spectralData[x]; y++) {
+      Serial.println(spectralData[x]);
       uint32_t pixelColor = colorPallets[currentPalette][0];
       pixelColor = (y > 2) ? colorPallets[currentPalette][1] : pixelColor;
       pixelColor = (y > 5) ? colorPallets[currentPalette][2] : pixelColor;
@@ -130,34 +161,19 @@ void spectralAnalyzer() {
   matrix.show();
 }
 
-// void volumeAnalyzer() {
-//   int raw = audioPin->readA();
-//   int vol = map(raw, 330, 650, 0, ledColumns + 1);
-//   Serial.println(vol);
-//   matrix.fillScreen(0);
-//   for (int i = 0; i < ledColumns; i++) {
-//     pixelColor = (vol > 3) ? BLUE : GREEN;
-//     pixelColor = (vol > 5) ? YELLOW : pixelColor;
-//     pixelColor = (vol > 7) ? RED : pixelColor;
-//     vol > i ? matrix.drawLine(i, 0, i, ledRows - 1, pixelColor)
-//             : matrix.drawLine(i, 0, i, ledRows - 1, 0);
-//   }
-//   matrix.show();
-// }
-
 void initButtonHandlers() {
   // Button click handlers
-  btn1.setClickMs(300);
+  btn1.setClickMs(450);
   btn1.attachClick([]() {
     if (btn2Pin->readD() == LOW) {
       Serial.println("Changing sensitivity");
       sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
-                        ? 3
+                        ? 20
                         : sensitivity + sensitivityStep;
     } else {
       Serial.println("Changing brightness");
       brightness = (brightness + brightnessStep > maxBrightness)
-                       ? 3
+                       ? minBrightness
                        : brightness + brightnessStep;
       matrix.setBrightness(brightness);
     }
@@ -165,6 +181,8 @@ void initButtonHandlers() {
   btn1.attachDoubleClick([]() {
     if (btn2Pin->readD() == LOW) {
       Serial.println("Changing Visualizer");
+      visualization =
+          (visualization + 1 > maxVisualization) ? 0 : visualization + 1;
     } else {
       Serial.println("Changing color pallet");
       currentPalette = (currentPalette + 1) % colorPalletsLength;
