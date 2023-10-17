@@ -1,9 +1,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
-#include <Button.h>
+#include <ButtonManager.h>
 #include <IOPin.h>
-#include <OneButton.h>
+// #include <OneButton.h>
 #include <arduinoFFT.h>
 
 // Color definitions
@@ -58,11 +58,11 @@ uint32_t colorPallets[colorPalletsLength][4] = {
 
 // Audio Config
 arduinoFFT FFT = arduinoFFT();
-const int minSensitivity = 20;
+const int minSensitivity = 3;
+const int sensitivityStep = 20;
 const int maxSensitivity = 100;
 const uint16_t audioSamples = 32;
-int sensitivity = minSensitivity;
-int sensitivityStep = minSensitivity;
+volatile int sensitivity = minSensitivity;
 const int usableSamples = (audioSamples / 2);
 double vReal[audioSamples];
 double vImage[audioSamples];
@@ -72,8 +72,7 @@ int visualization = 0;
 int maxVisualization = 2;
 
 // Button Config
-OneButton btn1(btn1Pin->pin(), true);
-Button btn2(*btn2Pin);
+ButtonManager buttonManager(3);
 
 void setup() {
   matrix.begin();
@@ -83,10 +82,12 @@ void setup() {
 }
 
 void loop() {
-  btn1.tick();
+  // btn1.tick();
   // testMatrix();
   spectralAnalyzer();
 }
+
+void isr() { buttonManager.isr(); }
 
 void spectralAnalyzer() {
   // read audio data
@@ -170,29 +171,36 @@ void drawBars(int *spectralData) {
 
 void initButtonHandlers() {
   // Button click handlers
-  btn1.setClickMs(450);
-  btn1.attachClick([]() {
+  attachInterrupt(digitalPinToInterrupt(3), isr, CHANGE);
+  // buttonManager.setVerbose(true);
+  buttonManager.setSingleClickCallback([]() {
     if (btn2Pin->readD() == LOW) {
-      Serial.println("Changing sensitivity");
+      Serial.print("Changing sensitivity: ");
       sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
-                        ? 20
+                        ? minSensitivity
                         : sensitivity + sensitivityStep;
+      Serial.println(sensitivity);
     } else {
-      Serial.println("Changing brightness");
+      Serial.print("Changing brightness: ");
       brightness = (brightness + brightnessStep > maxBrightness)
                        ? minBrightness
                        : brightness + brightnessStep;
       matrix.setBrightness(brightness);
+      Serial.println(brightness);
     }
   });
-  btn1.attachDoubleClick([]() {
+  // buttonManager.setDoubleClickCallback(
+  //     []() { Serial.println("Double Click"); });
+  buttonManager.setLongClickCallback([]() {
     if (btn2Pin->readD() == LOW) {
-      Serial.println("Changing Visualizer");
+      Serial.print("Changing Visualizer:");
       visualization =
           (visualization + 1 > maxVisualization) ? 0 : visualization + 1;
+      Serial.println(visualization);
     } else {
-      Serial.println("Changing color pallet");
+      Serial.print("Changing Color Pallet: ");
       currentPalette = (currentPalette + 1) % colorPalletsLength;
+      Serial.println(currentPalette);
     }
   });
 }

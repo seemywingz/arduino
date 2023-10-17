@@ -2,7 +2,7 @@
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
 #include <LED_Matrix.h>
-#include <Pin.h>
+#include <IOPin.h>
 
 int rows = 8;
 int columns = 8;
@@ -22,15 +22,15 @@ int colors[] = {MAGENTA, BLUE,   RED,  GREEN, CYAN,   YELLOW, WHITE, ORANGE,
 volatile int currentColor = 0;
 volatile int cellColor = colors[currentColor];
 
-Pin *btn1 = new Pin(3, INPUT_PULLUP);
-Pin *btn2 = new Pin(9, INPUT_PULLUP);
+IOPin *btn1 = new IOPin(3, INPUT_PULLUP);
+IOPin *btn2 = new IOPin(9, INPUT_PULLUP);
 
 void setup() {
   matrix.begin();
   Serial.begin(9600);
   randomSeed(analogRead(0));
   matrix.setBrightness(brightness);
-  attachInterrupt(digitalPinToInterrupt(btn1->pinNumber), btn1Press, RISING);
+  attachInterrupt(digitalPinToInterrupt(btn1->pin()), btn1Press, RISING);
 }
 
 void loop() {
