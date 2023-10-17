@@ -34,10 +34,10 @@ IOPin *btn1Pin = new IOPin(3, INPUT_PULLUP);
 IOPin *btn2Pin = new IOPin(9, INPUT_PULLUP);
 
 // LED Matrix Config
-int ledRows = 8;
-int ledColumns = 8;
-uint8_t matrixType =
-    NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
+const int ledRows = 8;
+const int ledColumns = 8;
+uint8_t matrixType = NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS +
+                     NEO_MATRIX_ZIGZAG;
 Adafruit_NeoMatrix matrix =
     Adafruit_NeoMatrix(ledColumns, ledRows, ledDataPin->getPinNumber(),
                        matrixType, NEO_GRB + NEO_KHZ800);
@@ -58,16 +58,17 @@ uint32_t colorPallets[colorPalletsLength][4] = {
 
 // Audio Config
 arduinoFFT FFT = arduinoFFT();
-int minSensitivity = 20;
-int maxSensitivity = 100;
+const int minSensitivity = 20;
+const int maxSensitivity = 100;
+const uint16_t audioSamples = 64;
 int sensitivity = minSensitivity;
 int sensitivityStep = minSensitivity;
-const uint16_t audioSamples = 64;
+const int usableSamples = (audioSamples / 2);
 double vReal[audioSamples];
 double vImage[audioSamples];
 
 // Visualization Config
-volatile int visualization = 0;
+int visualization = 0;
 int maxVisualization = 2;
 
 // Button Config
@@ -75,48 +76,51 @@ OneButton btn1(btn1Pin->getPinNumber(), true);
 
 void setup() {
   matrix.begin();
-  Serial.begin(115200);
+  Serial.begin(9600);
   initButtonHandlers();
   matrix.setBrightness(brightness);
-  // testMatrix();
 }
 
 void loop() {
   btn1.tick();
+  // testMatrix();
   spectralAnalyzer();
 }
 
 void spectralAnalyzer() {
+  // read audio data
   for (int i = 0; i < audioSamples; i++) {
     vReal[i] = audioPin->readA() / sensitivity;
     vImage[i] = 0;
   }
 
+  int maxInput = 80;
+  int spectralData[ledColumns] = {};
+  int sum = 0, sampleCount = 0, spectralIndex = 0;
+
   FFT.Windowing(vReal, audioSamples, FFT_WIN_TYP_HAMMING, FFT_FORWARD);
   FFT.Compute(vReal, vImage, audioSamples, FFT_FORWARD);
   FFT.ComplexToMagnitude(vReal, vImage, audioSamples);
 
-  int spectralData[ledColumns] = {};
-  int sum, sampleCount,
-      spectralIndex = 0, maxInput = 80,
-      usableSamples = (audioSamples / 2) - 12;  // high pass filter
+  for (int i = 2; i < usableSamples; i++) {
+    vReal[i] =  // set max value for input data
+        constrain(vReal[i], 0, maxInput);
+    vReal[i] =  // map data to fit our display
+        map(vReal[i], 0, maxInput, 0, ledRows + 1);
 
-  for (int i = 1; i < usableSamples; i++) {
-    vReal[i] =
-        constrain(vReal[i], 0, maxInput);  // set max value for input data
-
-    vReal[i] = map(vReal[i], 0, maxInput, 0,
-                   ledRows + 1);  // map data to fit our display
-
-    sum += vReal[i];
-    sampleCount++;
-    if (i % (usableSamples / ledColumns) ==
-        0) {  // average data for set of samples
-      int data = sum / sampleCount;
-      data = (spectralIndex == 0 && data == 3) ? 0 : data;
-      spectralData[spectralIndex++] = data;
-      sum = 0;
-      sampleCount = 0;
+    if (usableSamples > ledColumns) {
+      sum += vReal[i];
+      sampleCount++;
+      if (sampleCount == (usableSamples / ledColumns)) {
+        spectralData[spectralIndex] = sum / sampleCount;
+        spectralIndex++;
+        sampleCount = 0;
+        sum = 0;
+      }
+    } else  // we have less data than we can display so just copy the data into
+            // the spectralData array
+    {
+      spectralData[i] = vReal[i];
     }
   }
 
@@ -150,7 +154,6 @@ void drawBars(int *spectralData) {
   matrix.fillScreen(0);
   for (int x = 0; x < ledColumns; x++) {
     for (int y = 0; y < spectralData[x]; y++) {
-      Serial.println(spectralData[x]);
       uint32_t pixelColor = colorPallets[currentPalette][0];
       pixelColor = (y > 2) ? colorPallets[currentPalette][1] : pixelColor;
       pixelColor = (y > 5) ? colorPallets[currentPalette][2] : pixelColor;
