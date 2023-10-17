@@ -1,6 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
+#include <Button.h>
 #include <IOPin.h>
 #include <OneButton.h>
 #include <arduinoFFT.h>
@@ -28,19 +29,18 @@
 #define PEACH 0xFEA6
 
 // IOPins
-IOPin *ledDataPin = new IOPin(6);
-IOPin *audioPin = new IOPin(A3, INPUT);
+IOPin ledData(6);
+IOPin audio(A3, INPUT);
 IOPin *btn1Pin = new IOPin(3, INPUT_PULLUP);
 IOPin *btn2Pin = new IOPin(9, INPUT_PULLUP);
 
 // LED Matrix Config
 const int ledRows = 8;
-const int ledColumns = 8;
+const int ledColumns = 32;
 uint8_t matrixType = NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS +
                      NEO_MATRIX_ZIGZAG;
-Adafruit_NeoMatrix matrix =
-    Adafruit_NeoMatrix(ledColumns, ledRows, ledDataPin->getPinNumber(),
-                       matrixType, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
+    ledColumns, ledRows, ledData.pin(), matrixType, NEO_GRB + NEO_KHZ800);
 
 // Brightness and Color Config
 const int minBrightness = 3;
@@ -60,7 +60,7 @@ uint32_t colorPallets[colorPalletsLength][4] = {
 arduinoFFT FFT = arduinoFFT();
 const int minSensitivity = 20;
 const int maxSensitivity = 100;
-const uint16_t audioSamples = 64;
+const uint16_t audioSamples = 32;
 int sensitivity = minSensitivity;
 int sensitivityStep = minSensitivity;
 const int usableSamples = (audioSamples / 2);
@@ -72,7 +72,8 @@ int visualization = 0;
 int maxVisualization = 2;
 
 // Button Config
-OneButton btn1(btn1Pin->getPinNumber(), true);
+OneButton btn1(btn1Pin->pin(), true);
+Button btn2(*btn2Pin);
 
 void setup() {
   matrix.begin();
@@ -90,7 +91,7 @@ void loop() {
 void spectralAnalyzer() {
   // read audio data
   for (int i = 0; i < audioSamples; i++) {
-    vReal[i] = audioPin->readA() / sensitivity;
+    vReal[i] = audio.readA() / sensitivity;
     vImage[i] = 0;
   }
 
@@ -103,24 +104,25 @@ void spectralAnalyzer() {
   FFT.ComplexToMagnitude(vReal, vImage, audioSamples);
 
   for (int i = 2; i < usableSamples; i++) {
-    vReal[i] =  // set max value for input data
-        constrain(vReal[i], 0, maxInput);
-    vReal[i] =  // map data to fit our display
-        map(vReal[i], 0, maxInput, 0, ledRows + 1);
+    vReal[i] =
+        constrain(vReal[i], 0, maxInput);  // set max value for input data
 
-    if (usableSamples > ledColumns) {
+    vReal[i] = map(vReal[i], 0, maxInput, 0,
+                   ledRows + 1);  // map data to fit our display
+
+    if (usableSamples - 2 > ledColumns) {
+      vReal[i] = map(vReal[i], 0, usableSamples, 0, ledColumns);
       sum += vReal[i];
       sampleCount++;
-      if (sampleCount == (usableSamples / ledColumns)) {
-        spectralData[spectralIndex] = sum / sampleCount;
-        spectralIndex++;
+      if (i % (usableSamples / ledColumns) == 0) {
+        spectralData[spectralIndex++] = sum / sampleCount;
         sampleCount = 0;
         sum = 0;
       }
-    } else  // we have less data than we can display so just copy the data into
-            // the spectralData array
-    {
-      spectralData[i] = vReal[i];
+    } else {
+      spectralData[spectralIndex] = vReal[i];
+      spectralData[spectralIndex + 1] = vReal[i];
+      spectralIndex += 2;
     }
   }
 
@@ -138,15 +140,17 @@ void spectralAnalyzer() {
 
 void drawCircles(int *spectralData) {
   matrix.fillScreen(0);
-  int circleRadius = spectralData[2];
-  int circleColor = colorPallets[currentPalette][0];
-  circleColor =
-      (circleRadius > 2) ? colorPallets[currentPalette][1] : circleColor;
-  circleColor =
-      (circleRadius > 3) ? colorPallets[currentPalette][2] : circleColor;
-  circleColor =
-      (circleRadius > 5) ? colorPallets[currentPalette][3] : circleColor;
-  matrix.drawCircle(3, 4, circleRadius, circleColor);
+  for (int x = 0; x < usableSamples; x++) {
+    int circleRadius = spectralData[x];
+    int circleColor = colorPallets[currentPalette][0];
+    circleColor =
+        (circleRadius > 2) ? colorPallets[currentPalette][1] : circleColor;
+    circleColor =
+        (circleRadius > 3) ? colorPallets[currentPalette][2] : circleColor;
+    circleColor =
+        (circleRadius > 5) ? colorPallets[currentPalette][3] : circleColor;
+    matrix.drawCircle(x + 9, 3, circleRadius, circleColor);
+  }
   matrix.show();
 }
 
