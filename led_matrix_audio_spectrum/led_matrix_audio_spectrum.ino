@@ -160,7 +160,7 @@ void drawBars(int *spectralData) {
 void initButtonHandlers() {
   attachInterrupt(
       digitalPinToInterrupt(btn1.pin()), []() { btn1.isr(); }, CHANGE);
-  btn1.setVerbose(true);
+  // btn1.setVerbose(true);
   btn1.setSingleClickCallback([]() {
     if (btn2Pin.readD() == LOW) {
       Serial.println("Changing color pallet");
