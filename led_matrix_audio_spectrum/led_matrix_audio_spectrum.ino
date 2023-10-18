@@ -1,8 +1,8 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
+#include <ButtonManager.h>
 #include <IOPin.h>
-#include <OneButton.h>
 #include <arduinoFFT.h>
 
 // Color definitions
@@ -28,28 +28,27 @@
 #define PEACH 0xFEA6
 
 // IOPins
-IOPin *ledDataPin = new IOPin(6);
-IOPin *audioPin = new IOPin(A3, INPUT);
-IOPin *btn1Pin = new IOPin(3, INPUT_PULLUP);
-IOPin *btn2Pin = new IOPin(9, INPUT_PULLUP);
+IOPin ledData(6);
+IOPin audio(A3, INPUT);
+IOPin btn1Pin(3, INPUT_PULLUP);
+IOPin btn2Pin(9, INPUT_PULLUP);
 
 // LED Matrix Config
 int ledRows = 8;
 int ledColumns = 8;
 uint8_t matrixType =
     NEO_MATRIX_BOTTOM + NEO_MATRIX_RIGHT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;
-Adafruit_NeoMatrix matrix =
-    Adafruit_NeoMatrix(ledColumns, ledRows, ledDataPin->getPinNumber(),
-                       matrixType, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(
+    ledColumns, ledRows, ledData.pin(), matrixType, NEO_GRB + NEO_KHZ800);
 
 // Brightness and Color Config
 const int minBrightness = 3;
-volatile int brightness = minBrightness;
 const int brightnessStep = 81;
 const int maxBrightness = 255;
+const int colorPalletCount = 7;
 volatile int currentPalette = 0;
-const int colorPalletsLength = 7;
-uint32_t colorPallets[colorPalletsLength][4] = {
+volatile int brightness = minBrightness;
+uint32_t colorPallets[colorPalletCount][4] = {
     {GREEN, YELLOW, ORANGE, RED},       {BLUE, CYAN, CYAN, VIOLET},
     {MAGENTA, MAGENTA, VIOLET, VIOLET}, {CORAL, SALMON, SALMON, ROSE},
     {ROSE, ROSE, ROSE, ROSE},           {GREEN, GREEN, GREEN, GREEN},
@@ -58,20 +57,20 @@ uint32_t colorPallets[colorPalletsLength][4] = {
 
 // Audio Config
 arduinoFFT FFT = arduinoFFT();
-int minSensitivity = 20;
-int maxSensitivity = 100;
-int sensitivity = minSensitivity;
-int sensitivityStep = minSensitivity;
+const int minSensitivity = 3;
+const int maxSensitivity = 100;
+const int sensitivityStep = 20;
 const uint16_t audioSamples = 64;
 double vReal[audioSamples];
 double vImage[audioSamples];
+volatile int sensitivity = minSensitivity;
 
 // Visualization Config
 volatile int visualization = 0;
 int maxVisualization = 2;
 
 // Button Config
-OneButton btn1(btn1Pin->getPinNumber(), true);
+ButtonManager btn1(btn1Pin.pin());
 
 void setup() {
   matrix.begin();
@@ -81,14 +80,11 @@ void setup() {
   // testMatrix();
 }
 
-void loop() {
-  btn1.tick();
-  spectralAnalyzer();
-}
+void loop() { spectralAnalyzer(); }
 
 void spectralAnalyzer() {
   for (int i = 0; i < audioSamples; i++) {
-    vReal[i] = audioPin->readA() / sensitivity;
+    vReal[i] = audio.readA() / sensitivity;
     vImage[i] = 0;
   }
 
@@ -162,13 +158,14 @@ void drawBars(int *spectralData) {
 }
 
 void initButtonHandlers() {
-  // Button click handlers
-  btn1.setClickMs(450);
-  btn1.attachClick([]() {
-    if (btn2Pin->readD() == LOW) {
+  attachInterrupt(
+      digitalPinToInterrupt(btn1Pin.pin()), []() { btn1.isr(); }, CHANGE);
+  btn1.setVerbose(true);
+  btn1.setSingleClickCallback([]() {
+    if (btn2Pin.readD() == LOW) {
       Serial.println("Changing sensitivity");
       sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
-                        ? 20
+                        ? minSensitivity
                         : sensitivity + sensitivityStep;
     } else {
       Serial.println("Changing brightness");
@@ -178,14 +175,15 @@ void initButtonHandlers() {
       matrix.setBrightness(brightness);
     }
   });
-  btn1.attachDoubleClick([]() {
-    if (btn2Pin->readD() == LOW) {
+  btn1.setDoubleClickCallback([]() { Serial.println("Double Click"); });
+  btn1.setLongClickCallback([]() {
+    if (btn2Pin.readD() == LOW) {
       Serial.println("Changing Visualizer");
       visualization =
           (visualization + 1 > maxVisualization) ? 0 : visualization + 1;
     } else {
       Serial.println("Changing color pallet");
-      currentPalette = (currentPalette + 1) % colorPalletsLength;
+      currentPalette = (currentPalette + 1) % colorPalletCount;
     }
   });
 }
