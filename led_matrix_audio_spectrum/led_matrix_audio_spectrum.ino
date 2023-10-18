@@ -163,10 +163,8 @@ void initButtonHandlers() {
   btn1.setVerbose(true);
   btn1.setSingleClickCallback([]() {
     if (btn2Pin.readD() == LOW) {
-      Serial.println("Changing sensitivity");
-      sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
-                        ? minSensitivity
-                        : sensitivity + sensitivityStep;
+      Serial.println("Changing color pallet");
+      currentPalette = (currentPalette + 1) % colorPalletCount;
     } else {
       Serial.println("Changing brightness");
       brightness = (brightness + brightnessStep > maxBrightness)
@@ -178,12 +176,14 @@ void initButtonHandlers() {
   btn1.setDoubleClickCallback([]() { Serial.println("Double Click"); });
   btn1.setLongClickCallback([]() {
     if (btn2Pin.readD() == LOW) {
+      Serial.println("Changing sensitivity");
+      sensitivity = (sensitivity + sensitivityStep > maxSensitivity)
+                        ? minSensitivity
+                        : sensitivity + sensitivityStep;
+    } else {
       Serial.println("Changing Visualizer");
       visualization =
           (visualization + 1 > maxVisualization) ? 0 : visualization + 1;
-    } else {
-      Serial.println("Changing color pallet");
-      currentPalette = (currentPalette + 1) % colorPalletCount;
     }
   });
 }
