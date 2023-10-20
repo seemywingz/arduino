@@ -10,24 +10,26 @@ Button1 b1(btn1.pin());
 
 Servo servo;
 const float servoSpeed = 0.30;
-const int servoMax = 180;
+const int servoMax = 70;
 const int servoMin = 0;
-int startPos = 0;
-int servoPos = startPos;
+int servoPos = servoMin;
 
 void setup() {
   Serial.begin(115200);
   initButtonHandlers();
   servo.attach(servoPin.pin());
-  servo.write(startPos);
-  setServoAngle(startPos);
+  setServoAngle(servoPos);
 };
 
-void loop() { delay(1000); }
+void loop() {
+  // Serial.print("Servo Position: ");
+  // Serial.println(servo.read());
+  delay(1000);
+}
 
 void setServoAngle(int targetAngle) {
   int currentPosition = servo.read();
-  Serial.println("Setting Servo Angle");
+  Serial.println("\nSetting Servo Angle");
   Serial.print("Current Position: ");
   Serial.println(currentPosition);
   Serial.print("Target Position: ");
@@ -39,18 +41,20 @@ void setServoAngle(int targetAngle) {
   delay(millisToWait);
 }
 
+void toggleOpenClose() {
+  servoPos = (servoPos == servoMin) ? servoMax : servoMin;
+  setServoAngle(servoPos);
+}
+
 void initButtonHandlers() {
+  b1.setVerbose(true);
   attachInterrupt(
       digitalPinToInterrupt(b1.pin()), []() { b1.isr(); }, CHANGE);
-  b1.setVerbose(true);
-  b1.setSingleClickCallback([]() {
-    servoPos = (servoPos >= servoMax) ? servoMin : servoPos + servoMax / 5;
-    setServoAngle(servoPos);
-    Serial.print("Servo Position: ");
-    Serial.println(servoPos);
+  b1.setSinglePressCallback([]() {
+    // toggleOpenClose();
   });
-  b1.setDoubleClickCallback([]() { Serial.println("Double Click"); });
-  b1.setLongClickCallback([]() {
+  b1.setDoublePressCallback([]() {});
+  b1.setLongPressCallback([]() {
 
   });
 }
