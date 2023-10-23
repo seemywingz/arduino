@@ -2,15 +2,14 @@
 #include <ESPWiFi.h>
 
 #include "serverInfo.h"
-ESPWiFi espWiFi(ssid, password, IPAddress(9, 9, 9, 9));
+ESPWiFi espWiFi(ssid, password);
 
 void setup() {
   Serial.begin(115200);
-  espWiFi.startAsAccessPoint();
+  espWiFi.startAsClient();
 }
 
 void loop() {
   espWiFi.handleClient();
-  Serial.print("IP Address: ");
   Serial.println(espWiFi.infoString());
 }
